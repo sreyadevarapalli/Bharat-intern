@@ -1,0 +1,57 @@
+import numpy as np
+import pandas as pd 
+import matplotlib.pyplot as plt
+import seaborn as sn
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+#read the dataset
+dataset=pd.read_csv('winequality-white.csv', sep=';')
+dataset.head()
+#find missing values in dataset
+dataset.isnull().sum()
+#Distribution of data
+fig, axes = plt.subplots(nrows=2,ncols=1)
+fig.set_size_inches(10,20)
+sn.boxplot(data=dataset,orient="v",ax=axes[0])
+sn.boxplot(data=dataset,y="quality",orient="pH",ax=axes[1])
+#distribution of class label
+sn.countplot(x="quality", data=dataset)
+plt.xlabel("Wine Quality (0-10 scale)")
+plt.show()
+#Correlation analysis
+corrMatt=dataset.corr()
+mask=np.array(corrMatt)
+mask[np.tril_indices_from(mask)]=False
+fig,ax=plt.subplots()
+fig.set_size_inches(10,20)
+sn.heatmap(corrMatt, mask=mask,vmax=.8, square=True,annot=True)
+#Splitting class label from other features
+X=dataset.iloc[:, :-1].values
+y=dataset.iloc[:, -1].values
+
+# adding extra column because of Multiple linear regression
+X=np.append(arr=np.ones((X.shape[0],1)), values=X, axis=1)
+
+# splitting the dataset
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+# scaling the dataset
+sc_X=StandardScaler()
+X_train=sc_X.fit_transform(X_train)
+X_test=sc_X.transform(X_test)
+
+#linear regression
+from sklearn.linear_model import LinearRegression
+regressor=LinearRegression()
+regressor.fit(X_train,y_train)
+
+#Prediction
+prediction=regressor.predict(X_test)
+prediction1=pd.DataFrame(prediction)
+prediction1.head()
+#displaying results
+plt.scatter(y_test,prediction, c='r')
+plt.xlabel('Actual Quantity')
+plt.ylabel('Predicted Quantity')
+plt.title('Predicted Quantity Vs Actual Quantity')
+plt.show()
